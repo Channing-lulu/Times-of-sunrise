@@ -39,7 +39,7 @@ def main():
     print(f"{DATA.name}: {len(table)} rows. The first one: {table[0]}")
 
     days, sunrises, sunsets = [], [], []
-    for i, (year, month, day, sunrise, transit, sunset) in enumerate(table):
+    for i, (date, sunrise, transit, sunset) in enumerate(table):
         days.append(i + 1)
         sunrises.append(to_hours(sunrise))
         sunsets.append(to_hours(sunset))
