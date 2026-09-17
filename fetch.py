@@ -19,8 +19,8 @@ from pathlib import Path
 import requests
 
 URL = ("https://data.weather.gov.hk/weatherAPI/opendata/opendata.php"
-       "?dataType=CLMTEMP&rformat=csv&station=HKO&year=2026")      # CHANGE ME
-FILE = "hko-daily-mean-temperature-2026.csv"                          # CHANGE ME: say what it is,
+       "?dataType=SRS&rformat=json&year=2024&month=9")      # CHANGE ME
+FILE = "hko-sunrise-sunset-2024-09.json"                          # CHANGE ME: say what it is,
                                                                       # keep the publisher's extension
 HERE = Path(__file__).parent
 DATA = HERE / "data"
