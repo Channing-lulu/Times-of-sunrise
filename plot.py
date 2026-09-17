@@ -4,22 +4,18 @@
 # ///
 
 """
-Read the file in data/, make one picture, save it to out/.
+Read the SRS file in data/, draw sunrise & sunset for the month, save to out/.
 
     uv run plot.py
-
-Three parts, and you will replace all three: rows() reads the file the way *your*
-file needs reading, the loop in main() picks the numbers out of it, and the plot at
-the bottom is the transformation you chose. Print before you plot.
 """
 
-import csv
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-FILE = "hko-daily-mean-temperature-2026.csv"   # CHANGE ME: the same name as in fetch.py
-PICTURE = "plot.png"                           # what goes into out/, and into the README
+FILE = "hko-sunrise-sunset-2024-09.json"    # same name as in fetch.py
+PICTURE = "sunrise-sunset-2024-09.png"
 
 HERE = Path(__file__).parent
 DATA = HERE / "data" / FILE
@@ -27,34 +23,38 @@ OUT = HERE / "out"
 
 
 def rows(path):
-    """The file as a list of lists, one per line. The Observatory puts three lines
-    of titles above the table and a legend below it, so keep only the lines that
-    start with a year."""
-    kept = []
-    with path.open(encoding="utf-8-sig", newline="") as handle:
-        for line in csv.reader(handle):
-            if line and line[0].isdigit():
-                kept.append(line)
-    return kept
+    """The SRS JSON as a list of rows, one per day."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    return raw["data"]
+
+
+def to_hours(hhmm):
+    """'06:05' -> 6.083, so it can go on a numeric axis."""
+    hh, mm = hhmm.split(":")
+    return int(hh) + int(mm) / 60
 
 
 def main():
     table = rows(DATA)
     print(f"{DATA.name}: {len(table)} rows. The first one: {table[0]}")
 
-    days, values = [], []
-    for i, (year, month, day, value, quality) in enumerate(table):   # the loop over the numbers
-        if value == "***":                   # the Observatory's word for "missing"
-            continue
+    days, sunrises, sunsets = [], [], []
+    for i, (year, month, day, sunrise, transit, sunset) in enumerate(table):
         days.append(i + 1)
-        values.append(float(value))          # it arrived as text; make it a number
-    print(f"{len(values)} values, from {min(values)} to {max(values)}")
+        sunrises.append(to_hours(sunrise))
+        sunsets.append(to_hours(sunset))
+
+    print(f"{len(days)} days, "
+          f"sunrise {min(sunrises):.2f}-{max(sunrises):.2f}, "
+          f"sunset {min(sunsets):.2f}-{max(sunsets):.2f}")
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(days, values, color="#d6591d", linewidth=1.5)
-    ax.set_xlabel("day of 2026")
-    ax.set_ylabel("daily mean temperature, °C")
-    ax.set_title("Hong Kong Observatory, 2026 so far")
+    ax.plot(days, sunrises, color="#d6591d", linewidth=1.5, label="Sunrise")
+    ax.plot(days, sunsets, color="#1d6fd6", linewidth=1.5, label="Sunset")
+    ax.set_xlabel("day of September 2024")
+    ax.set_ylabel("time of day (hours)")
+    ax.set_title("Hong Kong Observatory — sunrise & sunset, September 2024")
+    ax.legend()
     fig.tight_layout()
 
     OUT.mkdir(exist_ok=True)
